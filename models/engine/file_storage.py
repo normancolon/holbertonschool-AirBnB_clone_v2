@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """This module defines a class to manage file storage for hbnb clone"""
 import json
-import importlib
 
 
 class FileStorage:
@@ -30,25 +29,32 @@ class FileStorage:
 
     def reload(self):
         """Loads storage dictionary from file.json"""
+        from models.base_model import BaseModel
+        from models.user import User
+        from models.place import Place
+        from models.state import State
+        from models.city import City
+        from models.amenity import Amenity
+        from models.review import Review
+
         classes_dict = {
-            'BaseModel': 'base_model.BaseModel',
-            'User': 'user.User',
-            'Place': 'place.Place',
-            'State': 'state.State',
-            'City': 'city.City',
-            'Amenity': 'amenity.Amenity',
-            'Review': 'review.Review'
+            'BaseModel': BaseModel,
+            'User': User,
+            'Place': Place,
+            'State': State,
+            'City': City,
+            'Amenity': Amenity,
+            'Review': Review
         }
 
         try:
+            dict_from_json = {}
             with open(FileStorage.__file_path, 'r') as f:
-                obj_dict = json.load(f)
-            for obj_id, obj_data in obj_dict.items():
-                class_name = obj_data["__class__"]
-                module_name, class_name = classes_dict[class_name].split('.')
-                module = importlib.import_module(f'models.{module_name}')
-                cls = getattr(module, class_name)
-                self.__objects[obj_id] = cls(**obj_data)
+                dict_from_json = json.load(f)
+                for key, obj_dictionary in dict_from_json.items():
+                    class_name = obj_dictionary["__class__"]  # Get class name
+                    class_to_call = classes_dict[class_name]
+                    self.__objects[key] = class_to_call(**obj_dictionary)
         except FileNotFoundError:
             pass
 
