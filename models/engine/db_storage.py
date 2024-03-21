@@ -2,7 +2,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from os import getenv
-from models.base_model import Base, BaseModel
+from models.base_model import Base
 from models.user import User
 from models.state import State
 from models.city import City
@@ -26,31 +26,20 @@ class DBStorage:
             Base.metadata.drop_all(self.__engine)
 
     def all(self, cls=None):
-        """Returns dict of current database"""
+        """Returns a dictionary of models currently in storage"""
         db_dict = {}
-        classes = {
-            'BaseModel': BaseModel, 'User': User, 'Place': Place,
-            'State': State, 'City': City, 'Amenity': Amenity,
-            'Review': Review
-        }
         if cls:
-            for key in classes.keys():
-                if cls.__name__ == key:
-                    objects = (self.__session.query(classes[key]).all())
-                    obj_class = key
-                    break
-            for obj in objects:
-                id = obj.id
-                obj_key = '{}.{}'.format(obj_class, id)
-                db_dict[obj_key] = obj
-            return db_dict
-        all_objects = (self.__session.query(City, State, User,
-                                            Place, Review, Amenity).filter(
-            City.state_id == State.id,
-            Place.user_id == User.id,
-            Place.city_id == City.id,
-            Review.place_id == Place.id,
-            Review.user_id == User.id).all())
+            objs = self.__session.query(cls).all()
+            for obj in objs:
+                key = f"{obj.__class__.__name__}.{obj.id}"
+                db_dict[key] = obj
+        else:
+            for class_ in self.classes().values():
+                objs = self.__session.query(class_).all()
+                for obj in objs:
+                    key = f"{obj.__class__.__name__}.{obj.id}"
+                    db_dict[key] = obj
+        return db_dict
 
     def new(self, obj):
         """Add the object to the current database session."""
