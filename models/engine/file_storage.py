@@ -12,7 +12,7 @@ class FileStorage:
         """Returns a dictionary of models currently in storage
         If cls is provided, returns a dictionary of objects of type cls.
         """
-        if cls is not None:
+        if cls:
             return {k: v for k, v in self.__objects.items() if isinstance(v, cls)}
         return self.__objects
 
@@ -29,45 +29,31 @@ class FileStorage:
 
     def reload(self):
         """Loads storage dictionary from file.json"""
-        from models.base_model import BaseModel
-        from models.user import User
-        from models.place import Place
-        from models.state import State
-        from models.city import City
-        from models.amenity import Amenity
-        from models.review import Review
-
-        classes_dict = {
-            'BaseModel': BaseModel,
-            'User': User,
-            'Place': Place,
-            'State': State,
-            'City': City,
-            'Amenity': Amenity,
-            'Review': Review
-        }
-
         try:
-            dict_from_json = {}
-            with open(FileStorage.__file_path, 'r') as f:
-                dict_from_json = json.load(f)
-                for key, obj_dictionary in dict_from_json.items():
-                    class_name = obj_dictionary["__class__"]  # Get class name
-                    class_to_call = classes_dict[class_name]
-                    self.__objects[key] = class_to_call(**obj_dictionary)
+            with open(self.__file_path, 'r') as f:
+                obj_dict = json.load(f)
+            for obj_id, obj_data in obj_dict.items():
+                # Dynamically creating instances of models
+                from models.base_model import BaseModel
+                from models.user import User
+                from models.place import Place
+                from models.state import State
+                from models.city import City
+                from models.amenity import Amenity
+                from models.review import Review
+                classes = {"BaseModel": BaseModel, "User": User, "Place": Place,
+                           "State": State, "City": City, "Amenity": Amenity, "Review": Review}
+                cls = classes[obj_data['__class__']]
+                self.__objects[obj_id] = cls(**obj_data)
         except FileNotFoundError:
             pass
 
     def delete(self, obj=None):
         """Deletes obj from __objects if it’s inside"""
-        if obj is not None:
-            key = f"{type(obj).__name__}.{obj.id}"
-            if key in self.__objects:
-                del self.__objects[key]
+        if obj:
+            key = f"{obj.__class__.__name__}.{obj.id}"
+            self.__objects.pop(key, None)
 
     def close(self):
+        """Call reload() method for deserializing the JSON file to objects."""
         self.reload()
-
-
-storage = FileStorage()
-storage.reload()
