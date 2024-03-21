@@ -1,10 +1,8 @@
 #!/usr/bin/python3
-import models
 from os import getenv
 from models.base_model import BaseModel, Base
 from sqlalchemy import Column, String, Integer, Float, ForeignKey, Table
 from sqlalchemy.orm import relationship
-from os import getenv
 
 # Define place_amenity here, outside of Place class
 if getenv('HBNB_TYPE_STORAGE') == 'db':
