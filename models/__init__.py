@@ -11,7 +11,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
-# Determine storage type based on environment variable
+# Determine storage type based on env variable
 HBNB_TYPE_STORAGE = os.getenv('HBNB_TYPE_STORAGE', 'file')
 
 if HBNB_TYPE_STORAGE == 'db':
@@ -23,10 +23,4 @@ else:
     from models.engine.file_storage import FileStorage
     storage = FileStorage()
 
-# Establish relationships for DBStorage, if necessary
-if HBNB_TYPE_STORAGE == 'db':
-    # Assuming the relationship table is defined here
-    # from models.place import PlaceAmenity
-
-    # Finalize and prepare for first use
     storage.reload()
