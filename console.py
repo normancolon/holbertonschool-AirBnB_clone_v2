@@ -2,33 +2,36 @@
 """ Console Module """
 import cmd
 import sys
+import shlex
 from models.base_model import BaseModel
-from models.__init__ import storage
+from models import storage
 from models.user import User
 from models.place import Place
 from models.state import State
 from models.city import City
 from models.amenity import Amenity
 from models.review import Review
+import os
+os.environ['HBNB_TYPE_STORAGE'] = 'file'
 
 
 class HBNBCommand(cmd.Cmd):
-    """ Contains the functionality for the HBNB console"""
+    """Contains the functionality for the HBNB console"""
 
-    # determines prompt for interactive/non-interactive modes
+    # Determines prompt for interactive/non-interactive modes
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
 
     classes = {
-               'BaseModel': BaseModel, 'User': User, 'Place': Place,
-               'State': State, 'City': City, 'Amenity': Amenity,
-               'Review': Review
-              }
+        'BaseModel': BaseModel, 'User': User, 'Place': Place,
+        'State': State, 'City': City, 'Amenity': Amenity,
+        'Review': Review
+    }
     dot_cmds = ['all', 'count', 'show', 'destroy', 'update']
     types = {
-             'number_rooms': int, 'number_bathrooms': int,
-             'max_guest': int, 'price_by_night': int,
-             'latitude': float, 'longitude': float
-            }
+        'number_rooms': int, 'number_bathrooms': int,
+        'max_guest': int, 'price_by_night': int,
+        'latitude': float, 'longitude': float
+    }
 
     def preloop(self):
         """Prints if isatty is false"""
@@ -36,14 +39,10 @@ class HBNBCommand(cmd.Cmd):
             print('(hbnb)')
 
     def precmd(self, line):
-        """Reformat command line for advanced command syntax.
-
-        Usage: <class name>.<command>([<id> [<*args> or <**kwargs>]])
-        (Brackets denote optional fields in usage example.)
-        """
+        """Reformat command line for advanced command syntax."""
         _cmd = _cls = _id = _args = ''  # initialize line elements
 
-        # scan for general formating - i.e '.', '(', ')'
+        # scan for general formatting - i.e '.', '(', ')'
         if not ('.' in line and '(' in line and ')' in line):
             return line
 
@@ -58,7 +57,7 @@ class HBNBCommand(cmd.Cmd):
             if _cmd not in HBNBCommand.dot_cmds:
                 raise Exception
 
-            # if parantheses contain arguments, parse them
+            # if parentheses contain arguments, parse them
             pline = pline[pline.find('(') + 1:pline.find(')')]
             if pline:
                 # partition args: (<id>, [<delim>], [<*args>])
@@ -66,19 +65,17 @@ class HBNBCommand(cmd.Cmd):
 
                 # isolate _id, stripping quotes
                 _id = pline[0].replace('\"', '')
-                # possible bug here:
-                # empty quotes register as empty _id when replaced
 
                 # if arguments exist beyond _id
                 pline = pline[2].strip()  # pline is now str
                 if pline:
                     # check for *args or **kwargs
-                    if pline[0] is '{' and pline[-1] is'}'\
+                    if pline[0] == '{' and pline[-1] == '}'\
                             and type(eval(pline)) is dict:
                         _args = pline
                     else:
                         _args = pline.replace(',', '')
-                        # _args = _args.replace('\"', '')
+
             line = ' '.join([_cmd, _cls, _id, _args])
 
         except Exception as mess:
@@ -114,17 +111,108 @@ class HBNBCommand(cmd.Cmd):
         pass
 
     def do_create(self, args):
-        """ Create an object of any class"""
-        if not args:
+        """Create an object of any class."""
+        args_list = shlex.split(args)
+        if len(args_list) == 0:
             print("** class name missing **")
             return
-        elif args not in HBNBCommand.classes:
+
+        class_name = args_list[0]
+        if class_name not in self.classes:
             print("** class doesn't exist **")
             return
-        new_instance = HBNBCommand.classes[args]()
+
+        # User-specific validation and creation logic
+        if class_name == "User":
+            # Extract and validate user-specific attributes
+            email = None
+            password = None
+            for arg in args_list[1:]:
+                key, value = arg.split("=", 1)
+                if key == "email":
+                    email = value.strip("\"")
+                elif key == "password":
+                    password = value.strip("\"")
+
+            # Check for required attributes
+            if not email or not password:
+                print("** User object requires email and password **")
+                return
+
+            # Create User instance with required and optional attributes
+            user_instance = User(email=email, password=password)
+            for arg in args_list[1:]:
+                key, value = arg.split("=", 1)
+                # Skip email and password as they're already set
+                if key in ["first_name", "last_name"]:
+                    setattr(user_instance, key, value.strip("\""))
+
+            user_instance.save()
+            print(user_instance.id)
+            storage.new(user_instance)
+            storage.save()
+            return
+
+        # General object creation logic for other classes
+        kwargs = {}
+        for arg in args_list[1:]:
+            try:
+                key, value = arg.split("=", 1)
+                if value[0] == '"' and value[-1] == '"':
+                    value = value[1:-1].replace('_', ' ').replace('\\"', '"')
+                elif '.' in value:
+                    value = float(value)
+                else:
+                    value = int(value)
+                kwargs[key] = value
+            except ValueError:
+                continue  # Skip invalid format
+
+        # Create the instance for other classes
+        instance = self.classes[class_name](**kwargs)
+        instance.save()
+        print(instance.id)
+        storage.new(instance)
         storage.save()
-        print(new_instance.id)
-        storage.save()
+
+    def validate_state_id(self, state_id):
+        """Validate the existence of state_id in the storage."""
+        states = self.classes['State'].all()
+        return any(state.id == state_id for state in states.values())
+
+    def validate_city_state_id(self, state_id):
+        """Validate the existence of state_id in DB or file storage."""
+        # Implementation depends on the storage system in use
+        # This is a placeholder function;
+        return True
+    # Add or modify other methods as necessary...
+
+    def validate_city_user_ids(self, city_id, user_id):
+        """Validates the existence of city_id and user_id."""
+        city_exists = storage.get(
+            "City", city_id) is not None if city_id else True
+        user_exists = storage.get(
+            "User", user_id) is not None if user_id else True
+        if not city_exists or not user_exists:
+            print("** city_id or user_id does not exist **")
+            return False
+        return True
+
+    def extract_place_args(self, args_list):
+        """Extracts and returns city_id and user_id from args_list."""
+        city_id = user_id = None
+        for arg in args_list:
+            if arg.startswith("city_id="):
+                city_id = arg.split("=", 1)[1].strip('"')
+            elif arg.startswith("user_id="):
+                user_id = arg.split("=", 1)[1].strip('"')
+        return city_id, user_id
+
+    def check_existence(self, key, value):
+        """Stub for checking if the given key-value exists in storage."""
+        # Implement the actual check here, depending on your storage system
+        # For now, let's assume everything exists
+        return True
 
     def help_create(self):
         """ Help information for the create method """
@@ -132,31 +220,23 @@ class HBNBCommand(cmd.Cmd):
         print("[Usage]: create <className>\n")
 
     def do_show(self, args):
-        """ Method to show an individual object """
-        new = args.partition(" ")
-        c_name = new[0]
-        c_id = new[2]
-
-        # guard against trailing args
-        if c_id and ' ' in c_id:
-            c_id = c_id.partition(' ')[0]
-
-        if not c_name:
+        """Method to show an individual object"""
+        args_list = shlex.split(args)
+        if len(args_list) == 0:
             print("** class name missing **")
             return
-
-        if c_name not in HBNBCommand.classes:
-            print("** class doesn't exist **")
-            return
-
-        if not c_id:
+        if len(args_list) == 1:
             print("** instance id missing **")
             return
-
-        key = c_name + "." + c_id
-        try:
-            print(storage._FileStorage__objects[key])
-        except KeyError:
+        class_name, id = args_list[:2]
+        if class_name not in self.classes:
+            print("** class doesn't exist **")
+            return
+        all_objs = storage.all(self.classes[class_name])
+        key = f"{class_name}.{id}"
+        if key in all_objs:
+            print(all_objs[key])
+        else:
             print("** no instance found **")
 
     def help_show(self):
@@ -187,7 +267,7 @@ class HBNBCommand(cmd.Cmd):
         key = c_name + "." + c_id
 
         try:
-            del(storage.all()[key])
+            del (storage.all()[key])
             storage.save()
         except KeyError:
             print("** no instance found **")
@@ -237,6 +317,8 @@ class HBNBCommand(cmd.Cmd):
         c_name = c_id = att_name = att_val = kwargs = ''
 
         # isolate cls from id/args, ex: (<cls>, delim, <id/args>)
+        # print(args)
+        # return
         args = args.partition(" ")
         if args[0]:
             c_name = args[0]
@@ -272,7 +354,7 @@ class HBNBCommand(cmd.Cmd):
                 args.append(v)
         else:  # isolate args
             args = args[2]
-            if args and args[0] is '\"':  # check for quoted arg
+            if args and args[0] == '\"':  # check for quoted arg
                 second_quote = args.find('\"', 1)
                 att_name = args[1:second_quote]
                 args = args[second_quote + 1:]
@@ -280,10 +362,10 @@ class HBNBCommand(cmd.Cmd):
             args = args.partition(' ')
 
             # if att_name was not quoted arg
-            if not att_name and args[0] is not ' ':
+            if not att_name and args[0] != ' ':
                 att_name = args[0]
             # check for quoted val arg
-            if args[2] and args[2][0] is '\"':
+            if args[2] and args[2][0] == '\"':
                 att_val = args[2][1:args[2].find('\"', 1)]
 
             # if att_val was not quoted arg
@@ -319,6 +401,7 @@ class HBNBCommand(cmd.Cmd):
         """ Help information for the update class """
         print("Updates an object with new information")
         print("Usage: update <className> <id> <attName> <attVal>\n")
+
 
 if __name__ == "__main__":
     HBNBCommand().cmdloop()

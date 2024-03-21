@@ -1,13 +1,36 @@
 #!/usr/bin/python3
 """ Module for testing file storage"""
+
 import unittest
 from models.base_model import BaseModel
 from models import storage
 import os
+from unittest.mock import patch
+from io import StringIO
+from console import HBNBCommand
 
 
 class test_fileStorage(unittest.TestCase):
     """ Class to test the file storage method """
+
+    # Existing setup, teardown, and test methods
+
+    def test_do_create_with_parameters(self):
+        """Test 'create' command with parameters."""
+        # Create a new BaseModel with name and number parameters
+        cmd = 'create BaseModel name="Test" number=100'
+        with patch('sys.stdout', new_callable=StringIO) as mocked_stdout:
+            HBNBCommand().onecmd(cmd)
+            obj_id = mocked_stdout.getvalue().strip()
+            self.assertTrue(obj_id)
+
+        # Verify the object exists in storage and check its attributes
+        obj_key = f"BaseModel.{obj_id}"
+        self.assertIn(obj_key, storage.all().keys())
+
+        obj = storage.all()[obj_key]
+        self.assertEqual(obj.name, "Test")
+        self.assertEqual(obj.number, 100)
 
     def setUp(self):
         """ Set up test environment """
@@ -107,3 +130,7 @@ class test_fileStorage(unittest.TestCase):
         from models.engine.file_storage import FileStorage
         print(type(storage))
         self.assertEqual(type(storage), FileStorage)
+
+
+if __name__ == "__main__":
+    unittest.main()
