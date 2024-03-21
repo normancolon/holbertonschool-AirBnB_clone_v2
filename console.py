@@ -122,38 +122,17 @@ class HBNBCommand(cmd.Cmd):
             print("** class doesn't exist **")
             return
 
-        # User-specific validation and creation logic
+        # Specific validation for User class
         if class_name == "User":
-            # Extract and validate user-specific attributes
-            email = None
-            password = None
-            for arg in args_list[1:]:
-                key, value = arg.split("=", 1)
-                if key == "email":
-                    email = value.strip("\"")
-                elif key == "password":
-                    password = value.strip("\"")
-
-            # Check for required attributes
-            if not email or not password:
+            # Check for email and password in arguments
+            has_email = any(arg.startswith("email=") for arg in args_list)
+            has_password = any(arg.startswith("password=")
+                               for arg in args_list)
+            if not has_email or not has_password:
                 print("** User object requires email and password **")
                 return
 
-            # Create User instance with required and optional attributes
-            user_instance = User(email=email, password=password)
-            for arg in args_list[1:]:
-                key, value = arg.split("=", 1)
-                # Skip email and password as they're already set
-                if key in ["first_name", "last_name"]:
-                    setattr(user_instance, key, value.strip("\""))
-
-            user_instance.save()
-            print(user_instance.id)
-            storage.new(user_instance)
-            storage.save()
-            return
-
-        # General object creation logic for other classes
+        # Parse kwargs from args
         kwargs = {}
         for arg in args_list[1:]:
             try:
@@ -168,7 +147,7 @@ class HBNBCommand(cmd.Cmd):
             except ValueError:
                 continue  # Skip invalid format
 
-        # Create the instance for other classes
+        # Create the instance
         instance = self.classes[class_name](**kwargs)
         instance.save()
         print(instance.id)

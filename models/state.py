@@ -14,8 +14,8 @@ class State(BaseModel, Base):
 
     if getenv('HBNB_TYPE_STORAGE') == 'db':
         # For DBStorage: Establish a relationship to cities with cascade options
-        cities = relationship('City', backref='state',
-                              cascade='all, delete-orphan')
+        cities = relationship('City', backref='state', cascade='all, delete')
+
     else:
         # For FileStorage: Implement a getter property to fetch city instances
         @property

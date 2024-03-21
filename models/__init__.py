@@ -26,7 +26,7 @@ else:
 # Establish relationships for DBStorage, if necessary
 if HBNB_TYPE_STORAGE == 'db':
     # Assuming the relationship table is defined here
-    from models.place import PlaceAmenity
+    # from models.place import PlaceAmenity
 
-# Finalize and prepare for first use
-storage.reload()
+    # Finalize and prepare for first use
+    storage.reload()
