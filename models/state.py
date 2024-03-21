@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """ State Module for HBNB project """
 from models.base_model import BaseModel, Base
+from models.city import City
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, String
 from os import getenv
@@ -14,9 +15,12 @@ class State(BaseModel, Base):
 
     if getenv('HBNB_TYPE_STORAGE') == 'db':
         cities = relationship('City', backref='state',
-                              cascade='all, delete-orphan')
+                              cascade='all, delete')
     else:
         @property
         def cities(self):
-            all_cities = models.storage.all(models.City)
-            return [city for city in all_cities.values() if city.state_id == self.id]
+            all_states_city = []
+            for city in models.storage.all(City).values():
+                if self.id == city.state_id:
+                    all_states_city.append(city)
+            return all_states_city
