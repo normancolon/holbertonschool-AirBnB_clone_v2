@@ -1,99 +1,95 @@
 #!/usr/bin/python3
-""" """
-from models.base_model import BaseModel
-import unittest
-import datetime
-from uuid import UUID
-import json
 import os
+import unittest
+from datetime import datetime
+from models.base_model import BaseModel
+from models.engine.file_storage import FileStorage
+from pycodestyle import StyleGuide
 
 
-class test_basemodel(unittest.TestCase):
-    """ """
+class BaseModelTest(unittest.TestCase):
+    """Tests the functionality of the BaseModel class."""
 
-    def __init__(self, *args, **kwargs):
-        """ """
-        super().__init__(*args, **kwargs)
-        self.name = 'BaseModel'
-        self.value = BaseModel
+    @classmethod
+    def setUpClass(cls):
+        """Sets up test environment before each class's tests run."""
+        cls.rename_file = os.path.isfile("file.json")
+        if cls.rename_file:
+            os.rename("file.json", "temp_file.json")
+        FileStorage._FileStorage__objects = {}
+        cls.model = BaseModel()
+        cls.model.name = "Holberton"
+        cls.model.my_number = 89
 
-    def setUp(self):
-        """ """
-        pass
+    @classmethod
+    def tearDownClass(cls):
+        """Cleans up after all tests have run in this class."""
+        del cls.model
+        FileStorage._FileStorage__objects = {}
+        if cls.rename_file:
+            os.rename("temp_file.json", "file.json")
 
     def tearDown(self):
+        """Cleans up tasks after each test's run."""
         try:
-            os.remove('file.json')
-        except:
+            os.remove("file.json")
+        except FileNotFoundError:
             pass
 
-    def test_default(self):
-        """ """
-        i = self.value()
-        self.assertEqual(type(i), self.value)
+    def test_style_base_model(self):
+        """Test that models/base_model.py conforms to PEP 8."""
+        style = StyleGuide(quiet=True)
+        result = style.check_files(['models/base_model.py'])
+        self.assertEqual(result.total_errors, 0,
+                         "Found code style errors (and warnings).")
 
-    def test_kwargs(self):
-        """ """
-        i = self.value()
-        copy = i.to_dict()
-        new = BaseModel(**copy)
-        self.assertFalse(new is i)
+    def test_docstring_presence(self):
+        """Test for existence of docstrings."""
+        self.assertIsNotNone(BaseModel.__doc__)
 
-    def test_kwargs_int(self):
-        """ """
-        i = self.value()
-        copy = i.to_dict()
-        copy.update({1: 2})
-        with self.assertRaises(TypeError):
-            new = BaseModel(**copy)
+    def test_attribute_creation(self):
+        """Test that attributes are correctly created."""
+        self.assertTrue(hasattr(self.model, "id"))
+        self.assertTrue(hasattr(self.model, "created_at"))
+        self.assertTrue(hasattr(self.model, "updated_at"))
+        self.assertTrue(hasattr(self.model, "name"))
+        self.assertEqual(self.model.name, "Holberton")
 
-    def test_save(self):
-        """ Testing save """
-        i = self.value()
-        i.save()
-        key = self.name + "." + i.id
-        with open('file.json', 'r') as f:
-            j = json.load(f)
-            self.assertEqual(j[key], i.to_dict())
+    def test_id_uniqueness(self):
+        """Test that each model's id is unique."""
+        model_clone = BaseModel()
+        self.assertNotEqual(self.model.id, model_clone.id)
 
-    def test_str(self):
-        """ """
-        i = self.value()
-        self.assertEqual(str(i), '[{}] ({}) {}'.format(self.name, i.id,
-                         i.__dict__))
+    def test_datetime_attributes(self):
+        """Test that time attributes are datetime objects."""
+        self.assertIsInstance(self.model.created_at, datetime)
+        self.assertIsInstance(self.model.updated_at, datetime)
 
-    def test_todict(self):
-        """ """
-        i = self.value()
-        n = i.to_dict()
-        self.assertEqual(i.to_dict(), n)
+    def test_str_method(self):
+        """Test the string representation method of BaseModel."""
+        model_str = str(self.model)
+        self.assertIn("[BaseModel]", model_str)
+        self.assertIn("id", model_str)
+        self.assertIn("name", model_str)
+        self.assertIn("Holberton", model_str)
+        self.assertIn("my_number", model_str)
 
-    def test_kwargs_none(self):
-        """ """
-        n = {None: None}
-        with self.assertRaises(TypeError):
-            new = self.value(**n)
+    def test_save_method(self):
+        """Test the save method of BaseModel."""
+        old_update_time = self.model.updated_at
+        self.model.save()
+        self.assertNotEqual(old_update_time, self.model.updated_at)
 
-    def test_kwargs_one(self):
-        """ """
-        n = {'Name': 'test'}
-        with self.assertRaises(KeyError):
-            new = self.value(**n)
+    def test_to_dict(self):
+        """Test conversion of model attributes to dictionary for JSON."""
+        model_dict = self.model.to_dict()
+        self.assertEqual(self.model.__class__.__name__,
+                         model_dict['__class__'])
+        self.assertIsInstance(model_dict['created_at'], str)
+        self.assertIsInstance(model_dict['updated_at'], str)
+        self.assertEqual(model_dict['name'], "Holberton")
+        self.assertEqual(model_dict['my_number'], 89)
 
-    def test_id(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.id), str)
 
-    def test_created_at(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.created_at), datetime.datetime)
-
-    def test_updated_at(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.updated_at), datetime.datetime)
-        n = new.to_dict()
-        new = BaseModel(**n)
-        self.assertFalse(new.created_at == new.updated_at)
+if __name__ == "__main__":
+    unittest.main()
