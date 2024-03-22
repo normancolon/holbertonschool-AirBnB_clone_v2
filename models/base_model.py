@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import uuid
-from uuid import uuid4
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
