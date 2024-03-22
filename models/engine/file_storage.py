@@ -13,9 +13,7 @@ class FileStorage:
         If cls is provided, returns a dictionary of objects of type cls.
         """
         if cls:
-            cls_objects = {k: v for k,
-                           v in self.__objects.items() if isinstance(v, cls)}
-            return cls_objects
+            return {k: v for k, v in self.__objects.items() if isinstance(v, cls)}
         return self.__objects
 
     def new(self, obj):
@@ -44,43 +42,12 @@ class FileStorage:
             pass
 
     def delete(self, obj=None):
-        """Deletes obj from __objects"""
-        if obj:
-            key = f"{obj.__class__.__name__}.{obj.id}"
+        """Deletes obj from __objects if it's inside - if obj is equal to None, the method does not do anything"""
+        if obj is not None:
+            key = f"{type(obj).__name__}.{obj.id}"
             if key in self.__objects:
                 del self.__objects[key]
-                self.save()
 
     def close(self):
         """Call reload() method for deserializing the JSON file to objects."""
         self.reload()
-
-
-def execute_command(command, storage):
-    if command.startswith("create"):
-        parts = command.split()
-        model_name = parts[0] if len(parts) > 1 else None
-        attributes = parts[1:]
-
-        if model_name and model_name in globals():
-            model_class = globals()[model_name]
-            instance = model_class()
-            for attr in attributes:
-                key, val = attr.split("=")
-                # Convert attribute value from string to correct type
-                if '"' in val:
-                    val = val.strip('"').replace('_', ' ')
-                elif '.' in val:
-                    val = float(val)
-                else:
-                    val = int(val)
-                setattr(instance, key, val)
-            instance.save()
-            print(f"New ID: {instance.id}")
-        else:
-            print(
-                "** class doesn't exist **" if model_name else "** class name missing **")
-
-
-storage = FileStorage()
-storage.reload()
