@@ -4,7 +4,8 @@ This module instantiates an object of class FileStorage or DBStorage
 depending on the environment variable HBNB_TYPE_STORAGE.
 """
 
-
+from models.engine.file_storage import FileStorage
+from models.engine.db_storage import DBStorage
 import os
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -17,19 +18,7 @@ if HBNB_TYPE_STORAGE == 'db':
     from models.engine.db_storage import DBStorage
     storage = DBStorage()
 else:
-    from models.engine.file_storage import FileStorage
     storage = FileStorage()
 
-# Ensure models are imported after storage initialization
 
-# # Import relationships
-# # Note: If 'place_amenity' is directly in one of the models, adjust accordingly
-# try:
-#     from models.relationships import place_amenity
-# except ImportError:
-#     # Handle the case where 'models/relationships.py' does not exist
-#     # This can be an empty block if no action is needed
-#     pass
-
-# Reload storage to load any existing data
 storage.reload()
