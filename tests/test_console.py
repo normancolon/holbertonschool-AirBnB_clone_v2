@@ -33,7 +33,6 @@ class ConsoleTest(unittest.TestCase):
                 pass
 
     def test_console_docstrings(self):
-        """Test to ensure docstrings are present in the console and its commands."""
         self.assertIsNotNone(HBNBCommand.__doc__)
         self.assertIsNotNone(HBNBCommand.emptyline.__doc__)
         self.assertIsNotNone(HBNBCommand.do_quit.__doc__)
