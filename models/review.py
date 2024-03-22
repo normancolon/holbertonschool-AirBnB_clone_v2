@@ -17,3 +17,4 @@ class Review(BaseModel, Base):
     # Ensure that back_populates or backref does not conflict with existing properties
     user = relationship('User', back_populates='reviews')
     place = relationship("Place", back_populates="reviews")
+    reviews = relationship("Review", back_populates="user")
