@@ -5,6 +5,8 @@ import sys
 import shlex
 from models.base_model import BaseModel
 from models import storage
+import uuid
+from models.__init__ import storage
 from models.engine.db_storage import DBStorage
 from models.user import User
 from models.place import Place
@@ -111,45 +113,35 @@ class HBNBCommand(cmd.Cmd):
         """ Overrides the emptyline method of CMD """
         pass
 
-    def do_create(self, args):
-        """Create an object of any class."""
-        args_list = shlex.split(args)
-        if len(args_list) == 0:
+    def do_create(self, arg):
+        """ Create an object of any class"""
+        args = arg.partition(" ")
+        if not args:
             print("** class name missing **")
             return
-
-        class_name = args_list[0]
-        if class_name not in self.classes:
+        class_name = args[0]
+        if class_name not in HBNBCommand.classes:
             print("** class doesn't exist **")
             return
-
-        # Specific validation for User class
-        if class_name == "User":
-            # Check for email and password in arguments
-            has_email = any(arg.startswith("email=") for arg in args_list)
-            has_password = any(arg.startswith("password=")
-                               for arg in args_list)
-            if not has_email or not has_password:
-                print("** User object requires email and password **")
-                return
-
-        # Parse kwargs from args
         kwargs = {}
-        for arg in args_list[1:]:
-            try:
-                key, value = arg.split("=", 1)
-                if value[0] == '"' and value[-1] == '"':
-                    value = value[1:-1].replace('_', ' ').replace('\\"', '"')
-                elif '.' in value:
-                    value = float(value)
-                else:
-                    value = int(value)
-                kwargs[key] = value
-            except ValueError:
-                continue  # Skip invalid format
+        parameters = args[2]
+        parameters = parameters.split(" ")[:]
+        id = str(uuid.uuid4())
+        kwargs['id'] = id
+        for par in parameters:
+            att_name = par.partition("=")[0]
+            att_value = par.partition("=")[2]
+
+            att_value = att_value.replace('_', ' ')
+            if att_value:
+                # remove double quote if exist
+                if att_value.startswith('"') and att_value.endswith('"'):
+                    att_value = att_value[1:-1]
+                    att_value = str(att_value)
+                kwargs[att_name] = att_value
 
         # Create the instance
-        instance = self.classes[class_name](**kwargs)
+        instance = HBNBCommand.classes[class_name](**kwargs)
         instance.save()
         print(instance.id)
         storage.new(instance)
@@ -272,7 +264,7 @@ class HBNBCommand(cmd.Cmd):
             for obj in objects.values():
                 list_to_print.append(str(obj))
         else:
-            # Retrieve all objects from the database using DBStorage
+            # Retrieve all obj of database using DBStorage
             objects = storage.all()
             for obj in objects.values():
                 list_to_print.append(str(obj))
