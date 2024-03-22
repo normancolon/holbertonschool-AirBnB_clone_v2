@@ -4,13 +4,7 @@ This module instantiates an object of class FileStorage or DBStorage
 depending on the environment variable HBNB_TYPE_STORAGE.
 """
 
-from models.review import Review
-from models.amenity import Amenity
-from models.city import City
-from models.state import State
-from models.place import Place
-from models.user import User
-from models.base_model import BaseModel  # Import BaseModel if needed
+
 import os
 from sqlalchemy.ext.declarative import declarative_base
 
