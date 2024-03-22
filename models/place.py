@@ -34,7 +34,6 @@ class Place(BaseModel, Base):
     amenities = relationship(
         "Amenity", secondary="place_amenity", viewonly=False)
 
-    # Association table for Place-Amenity Many-To-Many relationship, broken into multiple lines
     place_amenity = Table(
         'place_amenity', Base.metadata,
         Column('place_id', String(60), ForeignKey('places.id'),
