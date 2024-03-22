@@ -9,11 +9,13 @@ Base = declarative_base()
 
 
 class BaseModel:
-    id = Column(String(60), primary_key=True, nullable=False)
+    __abstract__ = True
+    id = Column(String(60), primary_key=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     def __init__(self, *args, **kwargs):
+        super().__init__(**kwargs)
         if not self.id:
             self.id = str(uuid4())
         self.created_at = self.updated_at = datetime.utcnow()
