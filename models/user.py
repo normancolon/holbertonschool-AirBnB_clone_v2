@@ -5,6 +5,7 @@ This module defines a class User.
 from models.base_model import BaseModel, Base
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
+from os import getenv
 
 
 class User(BaseModel, Base):
@@ -14,5 +15,6 @@ class User(BaseModel, Base):
     first_name = Column(String(128), nullable=True)
     last_name = Column(String(128), nullable=True)
 
-    reviews = relationship("Review", back_populates="user")
-    places = relationship('Place', back_populates='user')
+    if getenv("HBNB_TYPE_STORAGE") == "db":
+        places = relationship('Place', backref='user', cascade='all, delete')
+        reviews = relationship("Review", backref='user', cascade="all, delete")
