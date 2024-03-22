@@ -10,9 +10,9 @@ Base = declarative_base()
 
 class BaseModel:
     __abstract__ = True
-    id = Column(String(60), primary_key=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    id = Column(String(60), primary_key=True, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow())
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow())
 
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
@@ -59,9 +59,3 @@ class BaseModel:
         dictionary['updated_at'] = self.updated_at.isoformat()
         dictionary.pop('_sa_instance_state', None)
         return dictionary
-
-    @classmethod
-    def close(cls):
-        """Calls remove() method(if DBStorage)."""
-        from models import storage
-        storage.close()
