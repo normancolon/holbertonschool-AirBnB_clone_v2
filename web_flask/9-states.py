@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 """
-This module initiates a Flask web application that serves two types of HTML pages:
-- One that displays a list of all state objects from the database,
-- Another that displays details for a specific state identified by its ID.
-The application is accessible from all network interfaces on port 5000.
+Initializes a Flask web application that serves HTML pages for viewing the details of states
+and their respective cities from a database. The application listens on all interfaces
+on port 5000.
 """
 
 from models import storage
@@ -15,33 +14,34 @@ app = Flask(__name__)
 @app.route("/states", strict_slashes=False)
 def list_states():
     """
-    Serve a webpage that lists all state objects from the database.
-    States are presented in alphabetical order by their names.
+    Renders a webpage listing all states stored in the database, sorted alphabetically by name.
     """
-    states = sorted(storage.all("State").values(), key=lambda x: x.name)
+    states = sorted(storage.all("State").values(),
+                    key=lambda state: state.name)
     return render_template("9-states.html", states=states, id=None)
 
 
 @app.route("/states/<string:id>", strict_slashes=False)
-def get_state_by_id(id):
+def state_detail(id):
     """
-    Serve a webpage that shows details about a state specified by its 'id', if it exists.
+    Renders a detailed webpage for a specific state identified by 'id'. If the state does not
+    exist, renders a "Not found" page.
     """
     state = storage.get("State", id)
     if state:
         return render_template("9-states.html", states=[state], id=id)
-    return render_template("9-states.html", id="Not found")
+    else:
+        return render_template("9-states.html", id="Not found")
 
 
 @app.teardown_appcontext
-def teardown_db_session(exception):
+def teardown(exception=None):
     """
-    This function is called after each request, ensuring that the database session is closed.
-    This is crucial for freeing up resources that were temporarily allocated during the request.
+    Closes the database session at the end of each request to prevent memory leaks
+    and keep the application's performance stable.
     """
     storage.close()
 
 
-# Run the Flask app only if this script is executed directly (i.e., not imported).
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
