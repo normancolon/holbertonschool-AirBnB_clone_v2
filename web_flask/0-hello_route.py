@@ -1,13 +1,22 @@
 #!/usr/bin/python3
+"""
+This module launches a Flask application that greets users.
+Accessible via the root URL, it will simply return a greeting.
+Listens on 0.0.0.0 across all interfaces at port 5000.
+"""
+
 from flask import Flask
 
-app = Flask(__name__)
+# Initialize the Flask application
+greet_app = Flask(__name__)
 
-# Define the route for '/' with strict_slashes set to False
-@app.route('/', strict_slashes=False)
-def hello():
+
+@greet_app.route("/", strict_slashes=False)
+def greet():
+    """Responds with 'Hello HBNB!' when accessing the root URL."""
     return "Hello HBNB!"
 
+
+# Entry point for running the application
 if __name__ == "__main__":
-    # The app will listen on all interfaces on port 5000
-    app.run(host="0.0.0.0", port=5000)
+    greet_app.run(host="0.0.0.0", port=5000)

@@ -1,23 +1,31 @@
 #!/usr/bin/python3
+"""
+Flask application initializer module.
+
+This application is configured to listen on all network interfaces (0.0.0.0) using port 5000.
+It includes two routes:
+    - '/' which displays 'Hello HBNB!'
+    - '/hbnb' which displays 'HBNB'
+"""
+
 from flask import Flask
 
-app = Flask(__name__)
+# Creating an instance of the Flask class to initiate the application
+web_app = Flask(__name__)
 
-# Route for the root URL
 
-
-@app.route('/', strict_slashes=False)
-def hello():
+@web_app.route("/", strict_slashes=False)
+def display_hello():
+    """Returns a greeting to the client by displaying 'Hello HBNB!'."""
     return "Hello HBNB!"
 
-# Route for the /hbnb URL
 
-
-@app.route('/hbnb', strict_slashes=False)
-def hbnb():
+@web_app.route("/hbnb", strict_slashes=False)
+def display_hbnb():
+    """Returns 'HBNB' as a response to the client."""
     return "HBNB"
 
 
+# Run the application if this script is executed as the main program
 if __name__ == "__main__":
-    # Run the app on all interfaces (0.0.0.0) and port 5000
-    app.run(host="0.0.0.0", port=5000)
+    web_app.run(host="0.0.0.0")

@@ -1,37 +1,45 @@
 #!/usr/bin/python3
+"""
+Initializes a Flask web server that is accessible on 0.0.0.0, listening on port 5000.
+Routes handle various paths and display corresponding messages.
+"""
+
 from flask import Flask
 
-app = Flask(__name__)
+# Create an instance of the Flask class
+application = Flask(__name__)
 
-# Route for the root URL
 
-
-@app.route('/', strict_slashes=False)
-def hello():
+@application.route("/", strict_slashes=False)
+def greet():
+    """Respond with 'Hello HBNB!' at the root."""
     return "Hello HBNB!"
 
-# Route for the /hbnb URL
 
-
-@app.route('/hbnb', strict_slashes=False)
-def hbnb():
+@application.route("/hbnb", strict_slashes=False)
+def display_hbnb():
+    """Return the string 'HBNB' when accessing the /hbnb route."""
     return "HBNB"
 
-# Route for /c/<text> URL
+
+@application.route("/c/<text>", strict_slashes=False)
+def show_c_text(text):
+    """Return 'C ' followed by the modified user input, changing underscores to spaces."""
+    formatted_text = text.replace("_", " ")
+    return f"C {formatted_text}"
 
 
-@app.route('/c/<text>', strict_slashes=False)
-def c_is_fun(text):
-    return "C " + text.replace('_', ' ')
+@application.route("/python", defaults={"text": "is cool"}, strict_slashes=False)
+@application.route("/python/<text>", strict_slashes=False)
+def show_python_text(text):
+    """Display 'Python' followed by the user-provided text, with default text if none provided.
 
-# Route for /python/<text> URL with a default value for text
-
-
-@app.route('/python/', defaults={'text': 'is cool'}, strict_slashes=False)
-@app.route('/python/<text>', strict_slashes=False)
-def python_is_cool(text):
-    return "Python " + text.replace('_', ' ')
+    Underscores in the text are replaced with spaces.
+    """
+    formatted_text = text.replace("_", " ")
+    return f"Python {formatted_text}"
 
 
+# Run the Flask application if the script is executed directly
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    application.run(host="0.0.0.0")
