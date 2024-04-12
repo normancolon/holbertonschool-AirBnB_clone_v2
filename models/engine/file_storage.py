@@ -1,59 +1,52 @@
 #!/usr/bin/python3
-"""
-Manages JSON storage for models.
-"""
-
 import json
 from models.base_model import BaseModel
-from models import classes
+from models.user import User
+from models.place import Place
+from models.state import State
+from models.city import City
+from models.amenity import Amenity
+from models.review import Review
 
 
 class FileStorage:
-    """
-    Manages storage of hbnb models in JSON format.
-    """
     __file_path = 'file.json'
     __objects = {}
 
     def all(self, cls=None):
-        """
-        Returns objects by class type or all objects.
-        """
-        return {k: v for k, v in self.__objects.items() if not cls or isinstance(v, cls)}
+        if not cls:
+            return self.__objects
+        return {k: v for k, v in self.__objects.items() if isinstance(v, cls)}
 
     def new(self, obj):
-        """
-        Adds objects to the storage dictionary.
-        """
-        self.__objects[f"{type(obj).__name__}.{obj.id}"] = obj
+        key = f"{type(obj).__name__}.{obj.id}"
+        self.__objects[key] = obj
 
     def save(self):
-        """
-        Serializes objects to the JSON file.
-        """
         with open(self.__file_path, 'w', encoding='utf-8') as f:
             json.dump({k: v.to_dict() for k, v in self.__objects.items()}, f)
 
     def reload(self):
-        """
-        Reloads objects from the JSON file.
-        """
+        classes = {
+            'BaseModel': BaseModel, 'User': User, 'Place': Place,
+            'State': State, 'City': City, 'Amenity': Amenity, 'Review': Review
+        }
         try:
             with open(self.__file_path, 'r', encoding='utf-8') as f:
                 for k, v in json.load(f).items():
-                    self.__objects[k] = classes[v['__class__']](**v)
+                    cls = classes[v['__class__']]
+                    self.__objects[k] = cls(**v)
         except FileNotFoundError:
             pass
 
     def delete(self, obj=None):
-        """
-        Deletes an object from storage.
-        """
         if obj:
-            self.__objects.pop(f"{obj.__class__.__name__}.{obj.id}", None)
+            self.__objects.pop(f"{type(obj).__name__}.{obj.id}", None)
 
     def close(self):
-        """
-        Calls reload method for deserialization.
-        """
         self.reload()
+
+
+if __name__ == "__main__":
+    fs = FileStorage()
+    fs.reload()
