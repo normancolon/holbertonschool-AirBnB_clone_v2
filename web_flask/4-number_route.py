@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 """
-This module launches a Flask application simple text content on different routes.
+This launches a Flask app simple text content on different routes.
 """
 
 from flask import Flask
 
-# Instantiate the Flask application
 app = Flask(__name__)
 
 
