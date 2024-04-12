@@ -1,27 +1,35 @@
 #!/usr/bin/python3
 """
-Flask web application that lists all states from the database.
-Accessible at http://0.0.0.0:5000/states_list
+This module initializes a Flask  that serves a list of states from a database on a web page.
 """
-from flask import Flask, render_template
+
 from models import storage
+from flask import Flask, render_template
 
-app = Flask(__name__)
-
-
-@app.route('/states_list', strict_slashes=False)
-def states_list():
-    """Renders an HTML page that lists all states from the database, sorted by name."""
-    states = sorted(storage.all("State").values(),
-                    key=lambda state: state.name)
-    return render_template('7-states_list.html', states=states)
+# Create the Flask application instance
+state_app = Flask(__name__)
 
 
-@app.teardown_appcontext
-def teardown_db_session(exception):
-    """Closes the database session at the end of the request."""
+@state_app.route("/states_list", strict_slashes=False)
+def display_states():
+    """
+    Render an HTML page that lists all states stored in the database.
+    The states are sorted alphabetically by their names.
+    """
+    # Fetch all states from the database
+    state_list = storage.all("State").values()
+    sorted_states = sorted(state_list, key=lambda state: state.name)
+    return render_template("7-states_list.html", states=sorted_states)
+
+
+@state_app.teardown_appcontext
+def cleanup_session(exception=None):
+    """
+    Clean up the database session at the end of each request to prevent data leakage.
+    """
     storage.close()
 
 
+# Condition to ensure the server
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+    state_app.run(host="0.0.0.0", port=5000)
