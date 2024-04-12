@@ -1,53 +1,58 @@
 #!/usr/bin/python3
-"""
-Module to start a Flask web service with multiple routes.
-"""
+from flask import Flask, render_template, abort
 
-from flask import Flask, render_template
-
-# Creating a Flask application instance
 app = Flask(__name__)
 
 
-@app.route("/", strict_slashes=False)
-def greet():
+def sanitize_text(text):
 
-    return "Hello HBNB!"
-
-
-@app.route("/hbnb", strict_slashes=False)
-def display_hbnb():
-
-    return "HBNB"
+    return text.replace('_', ' ')
 
 
-@app.route("/c/<text>", strict_slashes=False)
-def display_c(text):
+@app.route('/', strict_slashes=False)
+def hello_hbnb():
 
-    formatted_text = text.replace("_", " ")
-    return f"C {formatted_text}"
-
-
-@app.route("/python", defaults={"text": "is cool"}, strict_slashes=False)
-@app.route("/python/<text>", strict_slashes=False)
-def display_python(text):
-
-    formatted_text = text.replace("_", " ")
-    return f"Python {formatted_text}"
+    return 'Hello HBNB!'
 
 
-@app.route("/number/<int:n>", strict_slashes=False)
-def show_number(n):
+@app.route('/hbnb', strict_slashes=False)
+def hbnb():
 
-    return f"{n} is a number"
-
-
-@app.route("/number_template/<int:n>", strict_slashes=False)
-def number_page(n):
-
-    return render_template("5-number.html", number=n)
+    return 'HBNB'
 
 
-# Main guard to ensure the server runs only if this script is executed directly
-if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+@app.route('/c/<text>', strict_slashes=False)
+def c_display(text="is cool"):
+
+    return f"C {sanitize_text(text)}"
+
+
+@app.route('/python/', defaults={'text': 'is cool'}, strict_slashes=False)
+@app.route('/python/<text>', strict_slashes=False)
+def python_display(text):
+
+    return f"Python {sanitize_text(text)}"
+
+
+@app.route('/number/<int:n>', strict_slashes=False)
+def int_display(n):
+
+    return f'{n} is a number'
+
+
+@app.route('/number_template/<int:n>', strict_slashes=False)
+def display_number(n):
+
+    return render_template('5-number.html', number=n)
+
+
+@app.errorhandler(404)
+def not_found(error):
+
+    return "This route is not available. Please check your URL.", 404
+
+
+if __name__ == '__main__':
+    import os
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)),
+            debug=os.getenv('DEBUG', False) == 'True')
