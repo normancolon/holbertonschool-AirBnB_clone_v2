@@ -1,72 +1,59 @@
 #!/usr/bin/python3
 """
-This module defines a class that manages JSON file storage for the hbnb clone.
+Manages JSON storage for models.
 """
 
 import json
+from models.base_model import BaseModel
+from models import classes
 
 
 class FileStorage:
     """
     Manages storage of hbnb models in JSON format.
-    Attributes:
-        __file_path (str): path to the JSON file.
-        __objects (dict): dictionary to store all objects by <class name>.id
     """
-
     __file_path = 'file.json'
     __objects = {}
 
     def all(self, cls=None):
         """
-        If a class type is provided, returns a dict of all instances of that class.
-        If no class type is provided, returns all objects.
+        Returns objects by class type or all objects.
         """
-        if cls is not None:
-            return {k: v for k, v in self.__objects.items() if isinstance(v, cls)}
-        return self.__objects
+        return {k: v for k, v in self.__objects.items() if not cls or isinstance(v, cls)}
 
     def new(self, obj):
         """
-        Adds new object to the storage dictionary.
+        Adds objects to the storage dictionary.
         """
-        key = f"{obj.__class__.__name__}.{obj.id}"
-        self.__objects[key] = obj
+        self.__objects[f"{type(obj).__name__}.{obj.id}"] = obj
 
     def save(self):
         """
-        Serializes the __objects to the JSON file specified by __file_path.
+        Serializes objects to the JSON file.
         """
         with open(self.__file_path, 'w', encoding='utf-8') as f:
-            obj_dict = {k: v.to_dict() for k, v in self.__objects.items()}
-            json.dump(obj_dict, f)
+            json.dump({k: v.to_dict() for k, v in self.__objects.items()}, f)
 
     def reload(self):
         """
-        Deserializes the JSON file to __objects, if FileStorage.__file_path exists.
+        Reloads objects from the JSON file.
         """
         try:
             with open(self.__file_path, 'r', encoding='utf-8') as f:
-                obj_data = json.load(f)
-                from models import classes  # Importing dictionary of classes
-                for obj_id, obj_attrs in obj_data.items():
-                    cls_name = obj_attrs['__class__']
-                    cls = classes[cls_name]
-                    self.__objects[obj_id] = cls(**obj_attrs)
+                for k, v in json.load(f).items():
+                    self.__objects[k] = classes[v['__class__']](**v)
         except FileNotFoundError:
             pass
 
     def delete(self, obj=None):
         """
-        Deletes obj from __objects if it’s inside.
+        Deletes an object from storage.
         """
         if obj:
-            obj_key = f"{type(obj).__name__}.{obj.id}"
-            if obj_key in self.__objects:
-                del self.__objects[obj_key]
+            self.__objects.pop(f"{obj.__class__.__name__}.{obj.id}", None)
 
     def close(self):
         """
-        Calls reload() for deserializing the JSON file to objects.
+        Calls reload method for deserialization.
         """
         self.reload()
