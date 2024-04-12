@@ -5,7 +5,7 @@ from models import storage
 from flask import Flask, render_template
 import sys
 sys.path.append(
-    '/home/lol/holbertonschool-AirBnB_clone_v2/')
+    '/home/lol/holbertonschool-AirBnB_clone_v2/web_flask/static/images')
 
 app = Flask(__name__)
 
