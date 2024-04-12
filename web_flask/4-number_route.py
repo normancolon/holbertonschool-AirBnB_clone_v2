@@ -1,5 +1,11 @@
 #!/usr/bin/python3
+"""
+This module launches a Flask application simple text content on different routes.
+"""
+
 from flask import Flask
+
+# Instantiate the Flask application
 app = Flask(__name__)
 
 
@@ -18,14 +24,16 @@ def hbnb_page():
 @app.route("/c/<text>", strict_slashes=False)
 def show_c(text):
 
-    return f"C {text.replace('_', ' ')}"
+    modified_text = text.replace("_", " ")
+    return f"C {modified_text}"
 
 
 @app.route("/python", defaults={"text": "is cool"}, strict_slashes=False)
 @app.route("/python/<text>", strict_slashes=False)
 def show_python(text):
 
-    return f"Python {text.replace('_', ' ')}"
+    modified_text = text.replace("_", " ")
+    return f"Python {modified_text}"
 
 
 @app.route("/number/<int:n>", strict_slashes=False)
