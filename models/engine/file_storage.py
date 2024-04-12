@@ -1,91 +1,60 @@
 #!/usr/bin/python3
 """
-Defines the FileStorage class for handling serialization and deserialization
-of JSON file storage.
+This module defines the FileStorage class to manage JSON serialization and deserialization.
 """
 
 import json
 from models.base_model import BaseModel
-from models.amenity import Amenity
-from models.city import City
-from models.place import Place
-from models.review import Review
-from models.state import State
 from models.user import User
+from models.place import Place
+from models.state import State
+from models.city import City
+from models.amenity import Amenity
+from models.review import Review
 
 
 class FileStorage:
     """
-    Represents an abstracted storage engine for serializing instances to
-    a JSON file and deserializing JSON file to instances.
-
-    Attributes:
-        __file_path (str): Path to the JSON file for storing objects.
-        __objects (dict): Dictionary to store objects by '<class name>.id'.
+    Serializes instances to a JSON file and deserializes JSON file to instances.
     """
-
-    __file_path = "file.json"
+    __file_path = 'file.json'
     __objects = {}
 
     def all(self, cls=None):
-        """
-        Return a dictionary of all stored objects, or all objects of a specific type.
-
-        Args:
-            cls (str or type): Class type or name of the objects to return.
-
-        Returns:
-            dict: A dictionary of stored objects, possibly filtered by class type.
-        """
+        """Returns a dictionary of models based on the class name."""
         if cls:
-            cls = eval(cls) if isinstance(cls, str) else cls
             return {k: v for k, v in self.__objects.items() if isinstance(v, cls)}
-        return self.__objects.copy()
+        return self.__objects
 
     def new(self, obj):
-        """
-        Add a new object to the storage dictionary.
-
-        Args:
-            obj (BaseModel): Object to add to storage.
-        """
-        key = f"{obj.__class__.__name__}.{obj.id}"
-        self.__objects[key] = obj
+        """Adds obj to the storage dictionary."""
+        self.__objects[f"{obj.__class__.__name__}.{obj.id}"] = obj
 
     def save(self):
-        """
-        Serialize the objects in the storage dictionary to the JSON file.
-        """
-        obj_dict = {k: v.to_dict() for k, v in self.__objects.items()}
-        with open(self.__file_path, 'w', encoding='utf-8') as f:
-            json.dump(obj_dict, f)
+        """Serializes __objects to the JSON file."""
+        with open(self.__file_path, 'w') as f:
+            json.dump({k: v.to_dict() for k, v in self.__objects.items()}, f)
 
     def reload(self):
-        """
-        Deserialize the JSON file to objects if the file exists.
-        """
+        """Deserializes the JSON file to __objects."""
         try:
-            with open(self.__file_path, 'r', encoding='utf-8') as f:
-                obj_dict = json.load(f)
-                for o in obj_dict.values():
-                    cls_name = o.pop('__class__', None)
-                    if cls_name:
-                        self.new(eval(cls_name)(**o))
+            with open(self.__file_path, 'r') as f:
+                objs = json.load(f)
+                for k, v in objs.items():
+                    cls_name = v['__class__']
+                    cls = globals()[cls_name]
+                    self.__objects[k] = cls(**v)
         except FileNotFoundError:
             pass
 
     def delete(self, obj=None):
-        """
-        Delete obj from __objects if it’s inside.
-
-        Args:
-            obj (BaseModel): Object to delete from storage.
-        """
-        obj_key = f"{type(obj).__name__}.{obj.id}"
-        self.__objects.pop(obj_key, None)
+        """Delete obj from __objects if it’s inside."""
+        if obj:
+            key = f"{obj.__class__.__name__}.{obj.id}"
+            if key in self.__objects:
+                del self.__objects[key]
+                self.save()
 
     def close(self):
-        """
-        Method for deserialization, alias for reload.
-        """
+        """Call reload() method for deserializing the JSON file to objects."""
         self.reload()
