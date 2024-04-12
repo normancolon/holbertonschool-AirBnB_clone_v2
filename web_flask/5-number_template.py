@@ -1,41 +1,58 @@
 #!/usr/bin/python3
+"""
+Module to start a Flask web service with multiple routes.
+Host: 0.0.0.0, Port: 5000
+Provides text and HTML responses based on path and dynamic content.
+"""
+
 from flask import Flask, render_template
 
-server = Flask(__name__)
+# Creating a Flask application instance
+app = Flask(__name__)
 
 
-@server.route('/')
-def root():
-    return 'Hello HBNB!'
+@app.route("/", strict_slashes=False)
+def greet():
+    """Returns a greeting as plain text at the application root."""
+    return "Hello HBNB!"
 
 
-@server.route('/hbnb')
-def hbnb():
-    return 'HBNB'
+@app.route("/hbnb", strict_slashes=False)
+def display_hbnb():
+    """Returns the string 'HBNB'."""
+    return "HBNB"
 
 
-@server.route('/c/<text>')
-def show_c(text):
-    text = text.replace('_', ' ')
-    return f'C {text}'
+@app.route("/c/<text>", strict_slashes=False)
+def display_c(text):
+    """Returns 'C' followed by the custom text, spaces replace underscores."""
+    formatted_text = text.replace("_", " ")
+    return f"C {formatted_text}"
 
 
-@server.route('/python/', defaults={'text': 'is cool'})
-@server.route('/python/<text>')
-def show_python(text):
-    text = text.replace('_', ' ')
-    return f'Python {text}'
+@app.route("/python", defaults={"text": "is cool"}, strict_slashes=False)
+@app.route("/python/<text>", strict_slashes=False)
+def display_python(text):
+    """Returns 'Python' followed by the custom text; default is 'is cool'.
+
+    Spaces replace underscores in the text.
+    """
+    formatted_text = text.replace("_", " ")
+    return f"Python {formatted_text}"
 
 
-@server.route('/number/<int:n>')
-def number(n):
-    return f'{n} is a number'
+@app.route("/number/<int:n>", strict_slashes=False)
+def show_number(n):
+    """Displays a string indicating the integer value provided."""
+    return f"{n} is a number"
 
 
-@server.route('/number_template/<int:n>')
-def number_template(n):
-    return render_template('5-number.html', n=n)
+@app.route("/number_template/<int:n>", strict_slashes=False)
+def number_page(n):
+    """Renders an HTML page if an integer is provided, using a template."""
+    return render_template("5-number.html", number=n)
 
 
-if __name__ == '__main__':
-    server.run(host='0.0.0.0', port=5000)
+# Main guard to ensure the server runs only if this script is executed directly
+if __name__ == "__main__":
+    app.run(host="0.0.0.0")
