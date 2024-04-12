@@ -1,10 +1,8 @@
 #!/usr/bin/python3
-import sys
 from flask import Flask, render_template
 from models import storage
 from models.state import State
 
-sys.path.append('/home/lol/holbertonschool-AirBnB_clone_v2/')
 app = Flask(__name__)
 
 
@@ -29,22 +27,23 @@ def python_display(text):
     return f"Python {text.replace('_', ' ')}"
 
 
-@app.route('/number/<n>', strict_slashes=False)
+@app.route('/number/<int:n>', strict_slashes=False)
 def int_display(n):
-    return f'{n} is a number' if n.isdigit() else '404 not found'
+    return f'{n} is a number' if isinstance(n, int) else '404 not found'
 
 
-@app.route('/number_template/<n>', strict_slashes=False)
+@app.route('/number_template/<int:n>', strict_slashes=False)
 def display_number(n):
-    return render_template('5-number.html', number=n) if n.isdigit() else '404 not found'
+    if isinstance(n, int):
+        return render_template('5-number.html', number=n)
+    return '404 not found'
 
 
-@app.route('/number_odd_or_even/<n>', strict_slashes=False)
+@app.route('/number_odd_or_even/<int:n>', strict_slashes=False)
 def display_even_odd(n):
-    if n.isdigit():
-        n = int(n)
-        number_type = 'even' if n % 2 == 0 else 'odd'
-        return render_template('6-number_odd_or_even.html', number=n, number_type=number_type)
+    if isinstance(n, int):
+        type_num = 'even' if n % 2 == 0 else 'odd'
+        return render_template('6-number_odd_or_even.html', number=n, type_num=type_num)
     return '404 not found'
 
 
